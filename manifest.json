@@ -2,8 +2,8 @@
   	
 	"manifest_version": 2,
 	"name": "Download Node Killer Form Filler",
-	"description": "This new and improved DNKFF 2.0 has the added capability to recieve commands from The EERE Migration Download Tool",
-	"version": "2.0",
+	"version": "3.1",
+	"description": "Version 3.1 receives commands from the EERE Download Migration Tool, including Office Specific Topic",
 	"web_accessible_resources": ["jquery-1.10.2.min.map","purl.js"], 
 	"browser_action": {
 		"default_icon": "icon.png",
@@ -11,11 +11,14 @@
 	},
 	"content_scripts": [
 		{
-			"matches": ["https://cms.doe.gov/node/add/download?*"],
+			"matches": ["https://cms.doe.gov/*"],
 			"js": ["jquery-1.10.2.min.js","purl.js","contentscript.js"]
 		}
 	],
 	"permissions": [
-		"storage"
-	]
+		"storage","tabs"
+	],
+	"icons": {
+		"19": "icon.png"
+	}
 }

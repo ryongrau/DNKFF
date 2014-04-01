@@ -1,18 +1,107 @@
-
+jQuery.expr[':'].regex = function(elem, index, match) {
+    var matchParams = match[3].split(','),
+        validLabels = /^(data|css):/,
+        attr = {
+            method: matchParams[0].match(validLabels) ? 
+                        matchParams[0].split(':')[0] : 'attr',
+            property: matchParams.shift().replace(validLabels,'')
+        },
+        regexFlags = 'ig',
+        regex = new RegExp(matchParams.join('').replace(/^\s+|\s+$/g,''), regexFlags);
+    return regex.test(jQuery(elem)[attr.method](attr.property));
+}
 
 $( document ).ready(function() {
-    console.log( "ready!" );
-	$('#edit-field-primary-location-und-0-value').val('none');
-	//$('#edit-field-topic-office-term-und').val('852536');
-	console.log($.url().param('dnkffdate'));
-	console.log($.url().param('dnkfftitle'));
-	console.log($.url().param('dnkffsubject'));
-	if ($.url().param('dnkffsubject') != null){
-		var myFields = $.url().param('dnkffdate') + '\t' + $.url().param('dnkfftitle') + '\t' + $.url().param('dnkffsubject');
-		populateFields(myFields);
-	};
-	
+    console.log( "DNKFF at the ready:");
+	console.log( "DNKFF referring URL:" + document.referrer );
+	for (var valuePair in $.url().param()){
+		try {
+			console.log('PARAM:'+valuePair + ' : ' + $.url().param(valuePair));
+			switch(valuePair) {
+				case 'dnkfftitle':
+					$('#edit-title').val($.url().param(valuePair));
+				break;
+				
+				case 'dnkffsubject':
+					$('#edit-body-und-0-summary').val($.url().param(valuePair));
+					$('#cke_contents_edit-body-und-0-value body').html($.url().param(valuePair));
+					$('iframe').contents().find('body').html($.url().param(valuePair));
+				break;
+				
+				case 'dnkffdate':
+					$('#edit-publish-date-datepicker-popup-0').val($.url().param(valuePair));
+				break;
+				
+				case 'dnkffofficespecific':
+					var myTopic
+					for (var osTopic in $.url().param(valuePair).split(':')){
+						myTopic = $.url().param(valuePair).split(':')[osTopic]; 
+						$('#edit-field-topic-office-term-und option[value=' + myTopic + ']').attr('selected','selected');
+						console.log(valuePair + ' : osTopic : '+osTopic + ' : ' + myTopic)
+					}
+				break;
+				
+				case 'dnkffURL':
+					$('#edit-field-primary-location-und-0-value').val('none');
+					$('html, body').animate({ 
+						scrollTop: $(document).height()-$(window).height()}, 
+						000
+					);
+					var htmlstr = '<div id="copyPasta" style="position:fixed;width:700px;height:50px;z-index:9999999;background-color:#e0ffff;top:200px;left:300px;padding:20px;font-size:20px;">' + $.url().param('dnkffURL') + '</div>';
+					$('body').append(htmlstr);
+					$('#edit-field-download-files-und-0 > .launcher').trigger('click'); 
+				break;	
+				
+				case 'dnkffautopublish':
+					switch($.url().param('dnkffautopublish')){
+						case 'true':
+							$('#edit-submit').trigger('click');
+						break;
+						case 'workflow1':
+							$(':regex(href,immediate\%20publish)').first().each(function(){
+								console.log('workflow1 link:' + $(this).attr('href'));
+								window.location.replace('https://cms.doe.gov' + $(this).attr('href') + '?dnkffautopublish=workflow2')
+							});
+						break;
+						case 'workflow2':
+							console.log('workflow2:');
+							$('#edit-submit').trigger('click');
+						break;
+					}
+				break;
+				
+			}
+		} catch(err) {
+			console.log(err);
+		}
+	}
+	if($.url(document.referrer).param("dnkffautopublish") ==='true' && document.referrer != ''){
+		$(':regex(href,workflow)').first().each(function(){
+			console.log('link:' + $(this).attr('href'));
+			window.location.replace('https://cms.doe.gov' + $(this).attr('href') + '?dnkffautopublish=workflow1')
+		});
+	} 
+	if($.url(document.referrer).param("dnkffautopublish") ==='workflow2' && document.referrer != ''){
+		//I'd love to close the tabs- it doesn't seem like that's like to happen 
+		/*chrome.tabs.query({currentWindow: true},
+			function(tabArray) {
+				chrome.tabs.remove(tabArray[0].id);
+				//chrome.pageAction.show(tabArray[0].id);
+			}
+		);
+		_getCurrentTab(function(tab){
+			console.log("tab id : " + tab.id)
+		});
+		*/
+	} 
 });
+
+function _getCurrentTab(callback){ //Take a callback
+    var theTab;
+    chrome.tabs.query({active:true, currentWindow:true},function(tab){
+        callback(tab); //call the callback with argument
+    });
+};
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
@@ -33,6 +122,7 @@ function populateFields(greeting){
 	var myTime = reqs[0];
 	var myTitle = reqs[1];
 	var mySummary = reqs[2];
+	$('#edit-field-primary-location-und-0-value').val('none');
 	$('#edit-title').val(myTitle);
 	$('#edit-body-und-0-summary').val(mySummary);
 	$('#cke_contents_edit-body-und-0-value body').html(mySummary);
@@ -40,89 +130,14 @@ function populateFields(greeting){
 	$('#edit-publish-date-datepicker-popup-0').val(myTime);
 	
 	$('html, body').animate({ 
-   		scrollTop: $(document).height()-$(window).height()}, 
-   		000
+		scrollTop: $(document).height()-$(window).height()}, 
+		000
 	);
-	if ($.url().param('dnkffURL') != null){
-		console.log('I has dnkffURL');
-		var htmlstr = '<div id="copyPasta" style="position:fixed;width:700px;height:50px;z-index:9999999;background-color:#e0ffff;top:200px;left:300px;padding:20px;font-size:20px;">' + $.url().param('dnkffURL') + '</div>';
-		$('body').append(htmlstr);
-		
-		chrome.storage.sync.set({'robots': 'WASSSAAAAPPP'}, function() {
-			// Notify that we saved.
-			console.log('Settings saved, unless:'+chrome.runtime.lastError);
-		});
-	} else {
-		console.log('I cannots find dnkffURL');
-	};
-	console.log('I should log sth. either way');
-	$('#edit-field-download-files-und-0 > .launcher').trigger('click');  
+	var htmlstr = '<div id="copyPasta" style="position:fixed;width:700px;height:50px;z-index:9999999;background-color:#e0ffff;top:200px;left:300px;padding:20px;font-size:20px;">' + $.url().param('dnkffURL') + '</div>';
+	$('body').append(htmlstr);
+	$('#edit-field-download-files-und-0 > .launcher').trigger('click'); 
+
 }
-
-
-//********************
-/*MutationObserver = window.WebKitMutationObserver;
-//************************** trying to click that final button- but I don't think it's working because in an iFrame=> cross-scripting block from local machine.  Schade.
-
-var observer = new MutationObserver(function(mutations) {
-	mutations.forEach(function(mutation) {
-		if (mutation.addedNodes){ 
-			for(var i=0; i<mutation.addedNodes.length; i++) {
-				// do things to your newly added nodes here
-				try{
-					var myNode = mutation.addedNodes[i];
-					console.log(myNode.getAttribute('id'));
-					if (myNode.getAttribute('id')==='mediaBrowser'){
-						console.log('I have found: ' + myNode.getAttribute('id'));
-						$('#mediaBrowser').load(function(){
-							console.log('media browser loaded'+$('#mediaBrowser').attr('class'));
-							//var firstFrame = window.parent.frames[0].document;
-							//console.log('edit upload :: ' + $('#edit-upload,firstFrame').attr('id'));
-							//$('#mediaBrowser').contents().find('#edit-upload').click();
-							console.log('and furthermore:'+$('#mediaBrowser').contents().find('#edit-upload').attr('id'));
-							console.log('and even furthermore:'+$('#mediaBrowser').contents().find('#edit-upload').attr('class'));
-							$('#mediaBrowser').contents().find('#edit-upload').click();
-							$('#mediaBrowser').contents().find('#edit-upload').trigger('click');
-							$('#mediaBrowser').contents().find('#edit-upload').trigger('mouseup');
-							$('#mediaBrowser').contents().find('#edit-upload').mouseup();
-							$(document.elementFromPoint(630,400)).click();
-							$(document.elementFromPoint(630,400)).trigger('click');
-							$(document.elementFromPoint(630,400)).trigger('mouseup');
-							$(document.elementFromPoint(630,400)).mouseup();
-							var e = jQuery.event('keydown');
-							e.which=9;
-							$("document").trigger(e); 
-							$("document").trigger(e); 
-							$("document").trigger(e); 
-							$("document").trigger(e); 
-							$("document").trigger(e); 
-							e.which=13;
-							$("document").trigger(e); 
-						});
-						
-						//var uploadBtn = $('#mediaBrowser').find('#edit-upload');
-						//console.log('even better, I have found: ' + uploadBtn.getAttribute('id'));
-					};
-				}catch(ex){
-					
-					console.log(ex.message);
-				}
-			}
-		}
-	})
-})
-
-observer.observe(document.body, {
-    childList: true
-  , subtree: true
-  , attributes: false
-  , characterData: false
-})
-
-function attachIframeObserver(){}
-
-*/
-
 
 
 
