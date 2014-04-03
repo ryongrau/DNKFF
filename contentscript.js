@@ -82,26 +82,15 @@ $( document ).ready(function() {
 		});
 	} 
 	if($.url(document.referrer).param("dnkffautopublish") ==='workflow2' && document.referrer != ''){
-		//I'd love to close the tabs- it doesn't seem like that's like to happen 
-		/*chrome.tabs.query({currentWindow: true},
-			function(tabArray) {
-				chrome.tabs.remove(tabArray[0].id);
-				//chrome.pageAction.show(tabArray[0].id);
-			}
-		);
-		_getCurrentTab(function(tab){
-			console.log("tab id : " + tab.id)
+
+		chrome.runtime.sendMessage('close me',function(response){
+			console.log('dnkffautopublish sendMessage response:'+response.message+' sender tab id: ' + response.senderTabId);
 		});
-		*/
+		
 	} 
+
 });
 
-function _getCurrentTab(callback){ //Take a callback
-    var theTab;
-    chrome.tabs.query({active:true, currentWindow:true},function(tab){
-        callback(tab); //call the callback with argument
-    });
-};
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
