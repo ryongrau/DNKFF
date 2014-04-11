@@ -2,8 +2,8 @@
   	
 	"manifest_version": 2,
 	"name": "Download Node Killer Form Filler",
-	"version": "3.2",
-	"description": "Version 3.2 receives commands from the EERE Download Migration Tool, including Office Specific Topic.. and maybe hopefully will close it out as well?",
+	"version": "3.3",
+	"description": "Version 3.3 receives commands from the EERE Download Migration Tool, including Office Specific Topic.. and will close it out as well.",
 	"web_accessible_resources": ["jquery-1.10.2.min.map","purl.js"], 
 	"browser_action": {
 		"default_icon": "icon.png",

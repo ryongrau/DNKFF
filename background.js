@@ -1,9 +1,5 @@
-/*chrome.extension.onRequest.addListener(function (request, sender) {
-  if (request == "show_page_action") {
-    //chrome.pageAction.show(sender.tab.id);
-	chrome.pageAction.show(' Here is my response!');
-  }
-});*/
+// closing tabs- can't be done ON the tabs, but rather on the background script. This runs all the time and listens to all calls from the extension across all tabs..
+
 chrome.runtime.onMessage.addListener(
 	function(message,sender,sendResponse){
 		if (message === 'close me'){
